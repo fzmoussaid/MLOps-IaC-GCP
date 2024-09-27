@@ -71,8 +71,6 @@ resource "kubernetes_deployment_v1" "deploy_vegetables_IaC" {
           }
         }
 
-        # Toleration is currently required to prevent perpetual diff:
-        # https://github.com/hashicorp/terraform-provider-kubernetes/pull/2380
         toleration {
           effect   = "NoSchedule"
           key      = "kubernetes.io/arch"
@@ -94,8 +92,6 @@ resource "kubernetes_service_v1" "service_vegetables_IaC" {
       app = kubernetes_deployment_v1.deploy_vegetables_IaC.spec[0].selector[0].match_labels.app
     }
 
-    # ip_family_policy = "RequireDualStack"
-
     port {
       port        = 80
       target_port = kubernetes_deployment_v1.deploy_vegetables_IaC.spec[0].template[0].spec[0].container[0].port[0].name
@@ -107,7 +103,6 @@ resource "kubernetes_service_v1" "service_vegetables_IaC" {
   depends_on = [time_sleep.wait_service_cleanup]
 }
 
-# Provide time for Service cleanup
 resource "time_sleep" "wait_service_cleanup" {
   depends_on = [google_container_cluster.vegetables_cluster_IaC]
 
