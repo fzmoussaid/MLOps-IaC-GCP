@@ -1,15 +1,15 @@
 data "google_client_config" "default" {}
 
 provider "kubernetes" {
-  host                   = "https://${google_container_cluster.vegetables-cluster.endpoint}"
+  host                   = "https://${google_container_cluster.vegetables_cluster_IaC.endpoint}"
   token                  = data.google_client_config.default.access_token
-  cluster_ca_certificate = base64decode(google_container_cluster.vegetables-cluster.master_auth[0].cluster_ca_certificate)
+  cluster_ca_certificate = base64decode(google_container_cluster.vegetables_cluster_IaC.master_auth[0].cluster_ca_certificate)
 
 }
 
-resource "kubernetes_deployment_v1" "deploy_vegetables" {
+resource "kubernetes_deployment_v1" "deploy_vegetables_IaC" {
   metadata {
-    name = "vegetable-deployment"
+    name = "vegetable-deployment-iac"
   }
 
   spec {
@@ -84,21 +84,21 @@ resource "kubernetes_deployment_v1" "deploy_vegetables" {
   }
 }
 
-resource "kubernetes_service_v1" "service_vegetables" {
+resource "kubernetes_service_v1" "service_vegetables_IaC" {
   metadata {
     name = "vegetables-classifier-app-loadbalancer"
   }
 
   spec {
     selector = {
-      app = kubernetes_deployment_v1.deploy_vegetables.spec[0].selector[0].match_labels.app
+      app = kubernetes_deployment_v1.deploy_vegetables_IaC.spec[0].selector[0].match_labels.app
     }
 
-    ip_family_policy = "RequireDualStack"
+    # ip_family_policy = "RequireDualStack"
 
     port {
       port        = 80
-      target_port = kubernetes_deployment_v1.deploy_vegetables.spec[0].template[0].spec[0].container[0].port[0].name
+      target_port = kubernetes_deployment_v1.deploy_vegetables_IaC.spec[0].template[0].spec[0].container[0].port[0].name
     }
 
     type = "LoadBalancer"
@@ -109,7 +109,7 @@ resource "kubernetes_service_v1" "service_vegetables" {
 
 # Provide time for Service cleanup
 resource "time_sleep" "wait_service_cleanup" {
-  depends_on = [google_container_cluster.vegetables-cluster]
+  depends_on = [google_container_cluster.vegetables_cluster_IaC]
 
   destroy_duration = "180s"
 }
